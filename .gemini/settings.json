@@ -1,0 +1,23 @@
+{
+	"mcpServers": {
+		"task-master-ai": {
+			"command": "npx",
+			"args": ["-y", "task-master-ai"],
+			"env": {
+				"GOOGLE_API_KEY": "${input:google_api_key}"
+			}
+		}
+	},
+	"inputs": [
+		{
+			"id": "task_master_tools",
+			"type": "promptString",
+			"description": "Task Master Tools Mode"
+		},
+		{
+			"id": "google_api_key",
+			"type": "promptString",
+			"description": "Google Gemini API Key"
+		}
+	]
+}
