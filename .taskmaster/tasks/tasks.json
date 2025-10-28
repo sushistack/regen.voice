@@ -20,7 +20,7 @@
         "testStrategy": "Execute the script with a sample .mp4 file. Verify that a `source.srt` file is generated and its content correctly reflects the speaker-dialogue format.",
         "priority": "high",
         "dependencies": [],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -133,7 +133,7 @@
     ],
     "metadata": {
       "created": "2025-10-28T12:15:49.583Z",
-      "updated": "2025-10-28T12:35:37.048Z",
+      "updated": "2025-10-28T13:19:09.557Z",
       "description": "Tasks for master context"
     }
   }

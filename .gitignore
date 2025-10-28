@@ -23,3 +23,11 @@ node_modules/
 
 # OS specific
 .DS_Store
+
+# python virtual environment
+.venv
+
+# data files
+data/_models
+data/input_videos
+data/output
