@@ -79,5 +79,5 @@ def test_diarization_from_video(setup_test_environment):
         content = f.read()
     assert len(content) > 0, f"Output file {expected_srt_file} is empty."
     
-    # 3. 화자 정보가 포함되어 있는지 확인 (예: [SPEAKER_00])
-    assert "[SPEAKER_" in content, "Speaker information ([SPEAKER_...]) not found in SRT file."
+    # 3. 화자 정보가 포함되어 있는지 확인 (예: Speaker 1:)
+    assert "Speaker " in content, "Speaker information ('Speaker ...') not found in SRT file."

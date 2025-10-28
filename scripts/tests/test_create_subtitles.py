@@ -11,7 +11,7 @@ SCRIPT_PATH = os.path.join(PROJECT_ROOT, 'scripts', 'create_subtitles.py')
 EXECUTABLE_PATH = os.path.join("C:", os.sep, "Users", "USER", "dev", "whisper.cpp", "build", "bin", "Release", "whisper-cli.exe")
 MODEL_PATH = os.path.join(PROJECT_ROOT, "data", "_models", "ggml-medium.bin")
 INPUT_VIDEO_PATH = os.path.join(PROJECT_ROOT, 'data', 'input_videos', 'sample.mp4')
-OUTPUT_DIR = os.path.join(PROJECT_ROOT, 'data', 'output', 'diarization')
+OUTPUT_DIR = os.path.join(PROJECT_ROOT, 'data', 'output', 'subtitles')
 VENV_PYTHON = os.path.join(PROJECT_ROOT, '.venv', 'Scripts', 'python.exe')
 
 @pytest.fixture(scope="module")
