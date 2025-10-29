@@ -22,7 +22,6 @@ def extract_audio(video_path: str, output_dir: str) -> str:
     if not os.path.exists(video_path):
         raise FileNotFoundError(f"입력 비디오 파일을 찾을 수 없습니다: {video_path}")
 
-    # 임시 파일 이름을 생성합니다. (예: ...\output\diarization\temp_audio_xxxxx.wav)
     temp_wav_path = tempfile.NamedTemporaryFile(
         prefix="temp_audio_",
         suffix=".wav",
