@@ -1,7 +1,4 @@
+google-generativeai
+srt
+python-dotenv
 pytest
-nemo_toolkit[asr]>=2.3.0
-nltk
-faster-whisper>=1.1.0
--e git+https://github.com/MahmoudAshraf97/demucs.git#egg=demucs
--e git+https://github.com/oliverguhr/deepmultilingualpunctuation.git#egg=deepmultilingualpunctuation
--e git+https://github.com/MahmoudAshraf97/ctc-forced-aligner.git#egg=ctc-forced-aligner
