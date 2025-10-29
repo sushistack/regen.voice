@@ -33,8 +33,4 @@ __pycache__/
 **/__pycache__
 
 # data files
-data/_models
-data/input_videos
-data/output
-data/input_srts
-data/output_srts
+data/*

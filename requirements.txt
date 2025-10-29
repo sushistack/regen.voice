@@ -2,3 +2,6 @@ google-generativeai
 srt
 python-dotenv
 pytest
+chatterbox-tts
+torchaudio
+pydub
