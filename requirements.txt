@@ -1,7 +1,8 @@
-google-generativeai
-srt
 python-dotenv
 pytest
-chatterbox-tts
-torchaudio
-pydub
+google-generativeai
+srt
+openai-whisper>=20240930
+torch>2.4.0
+PyYAML
+requests

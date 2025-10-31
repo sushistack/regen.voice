@@ -6,11 +6,7 @@ import re
 import google.generativeai as genai
 from dotenv import load_dotenv
 
-# --- 경로 설정 ---
-# 이 스크립트의 위치를 기준으로 프로젝트 루트 디렉터리를 찾습니다. (scripts -> project_root)
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-
-# `scripts` 디렉터리를 sys.path에 추가하여 `common` 모듈을 임포트할 수 있도록 합니다.
 sys.path.append(os.path.join(PROJECT_ROOT, 'scripts'))
 
 load_dotenv()

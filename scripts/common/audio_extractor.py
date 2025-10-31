@@ -5,16 +5,12 @@ import tempfile
 def extract_audio(video_path: str, output_dir: str) -> str:
     """
     ffmpeg을 사용하여 비디오 파일에서 오디오를 추출합니다.
-
-    whisper.cpp가 요구하는 형식인 16kHz, 16-bit, single-channel WAV 파일로 변환합니다.
-
+    16kHz, 16-bit, single-channel WAV 파일로 변환합니다.
     Args:
         video_path (str): 입력 비디오 파일의 경로.
         output_dir (str): 임시 오디오 파일을 저장할 디렉터리.
-
     Returns:
         str: 생성된 임시 WAV 파일의 경로.
-
     Raises:
         FileNotFoundError: 비디오 파일이 존재하지 않을 경우.
         subprocess.CalledProcessError: ffmpeg 실행에 실패할 경우.
