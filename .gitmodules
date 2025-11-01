@@ -1,3 +1,0 @@
-[submodule "scripts/vendor/whisper-diarization"]
-	path = scripts/vendor/whisper-diarization
-	url = https://github.com/MahmoudAshraf97/whisper-diarization.git

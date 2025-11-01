@@ -22,32 +22,6 @@
         "dependencies": [1],
         "status": "done",
         "subtasks": []
-      },
-      {
-        "id": 3,
-        "title": "Implement `tts` for Audio Generation",
-        "description": "Create the `tts` Python script. It will read the `cleaned.srt` file, and for each entry, use a TTS library to generate an audio segment for the dialogue.",
-        "details": "This script will handle parsing the SRT file and making individual calls to the TTS engine.",
-        "testStrategy": "Run the script with a `cleaned.srt` file. Verify that a set of individual audio files (e.g., .wav or .mp3) are created, one for each line of dialogue in the SRT.",
-        "priority": "medium",
-        "dependencies": [
-          2
-        ],
-        "status": "pending",
-        "subtasks": []
-      },
-      {
-        "id": 4,
-        "title": "Implement Timeline-based Audio Merging in `tts`",
-        "description": "Add functionality to the `tts` to combine all generated audio segments into a single, final audio file. The merging process must respect the timestamps from the `cleaned.srt` to ensure correct pacing and silence between spoken lines.",
-        "details": "This will likely involve using an audio manipulation library like pydub or ffmpeg-python to sequence the audio clips and insert silence based on the start and end times in the SRT file.",
-        "testStrategy": "Generate a final audio file from a multi-line SRT. Play the audio file alongside the original video to verify that the generated speech is correctly synchronized with the video's dialogue timings.",
-        "priority": "medium",
-        "dependencies": [
-          3
-        ],
-        "status": "done",
-        "subtasks": []
       }
     ],
     "metadata": {

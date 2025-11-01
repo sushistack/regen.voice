@@ -33,4 +33,4 @@ __pycache__/
 **/__pycache__
 
 # data files
-data/*
+# data/
