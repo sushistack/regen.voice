@@ -20,6 +20,15 @@ CORRECTION_PROMPT = '''You are an expert subtitle translator and editor. Your ta
     *   Fix all punctuation and spelling mistakes.
     *   If a sentence is too long (over 20 characters), do NOT split it into multiple lines. Instead, insert a '||' marker at the appropriate split point.
     *   Remove excessive and meaningless repetitions of characters or words (e.g., 'えええええ'), but keep natural filler words like 'ええと' or 'あの'.
+    *   **Merge short, consecutive, similar subtitles.** For example, if the input is:
+        10: え
+        11: え
+        12: え
+        
+        Then output the merged text for the first line, and output the *original* text for the subsequent merged lines, like this:
+        10: えええ
+        11: え
+        12: え
     *   Preserve the original meaning of the sentence.
 
 **Original Subtitles:**
@@ -67,13 +76,47 @@ def correct_srt_with_gemini(source_srt_path: str, output_srt_path: str):
             raise ValueError(f"오류: 원본 자막({len(subtitles)}개)과 교정된 자막({len(corrected_lines)}개)의 수가 일치하지 않거나, 응답 형식이 잘못되었습니다.")
 
         new_subtitles = []
-        for i, sub in enumerate(subtitles):
-            corrected_line = corrected_lines[i]
+        i = 0
+        while i < len(subtitles):
+            original_line_content = subtitles[i].content.strip()
+            corrected_line = corrected_lines[i].strip()
+            
+            # If the corrected line is identical to the original, it might be a merged line.
+            # We only consider it merged if the *previous* line was actually corrected/merged.
+            # This logic needs to be careful to not merge lines that were simply not changed by the LLM.
+            
+            # This is a new subtitle. Find out if it merges subsequent lines.
+            start_sub = subtitles[i]
+            end_sub = subtitles[i]
+            
+            merge_count = 0
+            # Check if the current line was actually corrected (not just identical to original)
+            is_current_line_corrected = (corrected_line != original_line_content)
+
+            if is_current_line_corrected: # Only look for merges if the current line was actually changed
+                for j in range(i + 1, len(subtitles)):
+                    next_original_line_content = subtitles[j].content.strip()
+                    next_corrected_line = corrected_lines[j].strip()
+                    
+                    # If the next corrected line is identical to its original, it's part of the merge
+                    if next_corrected_line == next_original_line_content:
+                        merge_count += 1
+                        end_sub = subtitles[j]
+                    else:
+                        break
+            
+            if merge_count > 0:
+                original_merged_text = " ".join([s.content for s in subtitles[i:i+merge_count+1]])
+                print(f'  병합 및 교정: "{original_merged_text}" -> "{corrected_line}"')
+            else:
+                print(f'  교정: "{start_sub.content}" -> "{corrected_line}"')
+            
+            # Now handle splitting (||) for the potentially merged line
             if "||" in corrected_line:
                 parts = corrected_line.split("||")
                 num_parts = len(parts)
-                duration_per_part = (sub.end - sub.start) / num_parts
-                current_start = sub.start
+                duration_per_part = (end_sub.end - start_sub.start) / num_parts
+                current_start = start_sub.start
                 for part_text in parts:
                     new_end = current_start + duration_per_part
                     new_sub = srt.Subtitle(
@@ -84,16 +127,18 @@ def correct_srt_with_gemini(source_srt_path: str, output_srt_path: str):
                     )
                     new_subtitles.append(new_sub)
                     current_start = new_end
-                    print(f'  분할된 교정: "{part_text.strip()}"')
+                    print(f'    분할된 자막: "{part_text.strip()}"')
             else:
                 new_sub = srt.Subtitle(
                     index=len(new_subtitles) + 1,
-                    start=sub.start,
-                    end=sub.end,
+                    start=start_sub.start,
+                    end=end_sub.end,
                     content=corrected_line
                 )
                 new_subtitles.append(new_sub)
-                print(f'  교정: "{sub.content}" -> "{corrected_line}"')
+
+            # Move index past all merged subtitles
+            i += 1 + merge_count
 
         corrected_subtitles = new_subtitles
 

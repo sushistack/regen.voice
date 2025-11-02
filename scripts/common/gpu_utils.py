@@ -14,13 +14,11 @@ def check_gpu_availability():
     """
     try:
         if torch.cuda.is_available():
+            # ROCm-enabled PyTorch builds remap torch.cuda to use HIP backend,
+            # but PyTorch itself exposes it as 'cuda'.
             device_type = 'cuda'
             recommended_device = 'cuda'
-            details = f"NVIDIA CUDA GPU 감지됨. 디바이스 수: {torch.cuda.device_count()}"
-        elif hasattr(torch.version, 'hip') and torch.version.hip:
-            device_type = 'hip'
-            recommended_device = 'cuda'  # PyTorch에서 ROCm도 'cuda'로 처리
-            details = f"AMD ROCm GPU 감지됨. 버전: {torch.version.hip}"
+            details = f"AMD ROCm GPU 감지됨. 디바이스 수: {torch.cuda.device_count()}"
         else:
             device_type = 'cpu'
             recommended_device = 'cpu'

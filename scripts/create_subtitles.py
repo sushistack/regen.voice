@@ -76,11 +76,11 @@ def format_timestamp(seconds: float) -> str:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="OpenAI Whisper를 사용하여 비디오 파일의 음성을 텍스트로 변환합니다.")
-    parser.add_argument("video_path", type=str, help="처리할 비디오 파일의 경로입니다.")
+    parser.add_argument("--video_path", type=str, help="처리할 비디오 파일의 경로입니다.")
     parser.add_argument("--output_dir", type=str, required=True, help="출력 SRT 파일을 저장할 디렉터리입니다.")
     parser.add_argument("--language", type=str, default="ja", help="음성 인식에 사용할 언어입니다. (기본값: ja)")
-    parser.add_argument("--model_size", type=str, default="medium", choices=["tiny", "base", "small", "medium", "large"], 
-                        help="Whisper 모델 크기입니다. (기본값: medium)")
+    parser.add_argument("--model_size", type=str, default="turbo", choices=["tiny", "base", "small", "medium", "turbo", "large"], 
+                        help="Whisper 모델 크기입니다. (기본값: turbo)")
     
     args = parser.parse_args()
     
