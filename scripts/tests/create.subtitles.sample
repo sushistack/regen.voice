@@ -1,0 +1,5 @@
+python3 scripts/create_subtitles.py \
+--video_path "data/00_videos/sample.mp4" \
+--output_dir "data/01_subtitles" \
+--language "ja" \
+--model_size "turbo"
