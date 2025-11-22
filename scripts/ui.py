@@ -35,7 +35,7 @@ class App(tk.Tk):
     def browse_reference_audio(self):
         filename = filedialog.askopenfilename(
             title="Select a Reference Audio File",
-            initialdir="/home/jay-gim/dev/Chatterbox-TTS-Server/reference_audio",
+            initialdir="/home/jay-gim/dev/regen.voice/reference_audio",
             filetypes=(("Audio files", "*.wav *.mp3 *.flac"), ("All files", "*.*"))
         )
         if filename:
