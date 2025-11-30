@@ -33,13 +33,13 @@ class App(tk.Tk):
         self.stop_requested = False
 
     def browse_reference_audio(self):
-        filename = filedialog.askopenfilename(
-            title="Select a Reference Audio File",
+        filenames = filedialog.askopenfilenames(
+            title="Select Reference Audio Files",
             initialdir="/home/jay-gim/dev/regen.voice/reference_audio",
             filetypes=(("Audio files", "*.wav *.mp3 *.flac"), ("All files", "*.*"))
         )
-        if filename:
-            self.reference_audio_path.set(filename)
+        if filenames:
+            self.reference_audio_path.set(";".join(filenames))
 
     def stop_pipeline(self):
         if self.thread and self.thread.is_alive():
@@ -64,7 +64,7 @@ class App(tk.Tk):
         ttk.Entry(path_frame, textvariable=self.video_path, width=60).grid(row=0, column=1, padx=5, pady=2)
         ttk.Button(path_frame, text="Browse", command=self.browse_video).grid(row=0, column=2, padx=5, pady=2)
 
-        ttk.Label(path_frame, text="Reference Audio:").grid(row=4, column=0, sticky="w", padx=5, pady=2)
+        ttk.Label(path_frame, text="Reference Audio(s):").grid(row=4, column=0, sticky="w", padx=5, pady=2)
         ttk.Entry(path_frame, textvariable=self.reference_audio_path, width=60).grid(row=4, column=1, padx=5, pady=2)
         ttk.Button(path_frame, text="Browse", command=self.browse_reference_audio).grid(row=4, column=2, padx=5, pady=2)
 
@@ -214,7 +214,6 @@ class App(tk.Tk):
 
         try:
             video_path = self.video_path.get()
-            video_filename = os.path.splitext(os.path.basename(video_path))[0]
 
             # This will hold the path to the SRT file to be used by the next step
             current_srt_path = None
@@ -228,16 +227,19 @@ class App(tk.Tk):
                     return
             else:
                 self.log_queue.put("--- Step 1: Skipping subtitle creation. ---\n")
-                # If skipping, assume the file already exists at the standard path
-                current_srt_path = os.path.join(self.subtitles_dir.get(), f"created.srt")
-                if not os.path.exists(current_srt_path):
-                    self.log_queue.put(f"--- ERROR: Subtitle file not found at {current_srt_path}. Please run Step 1 or place the file manually. ---\n")
-                    return
+                # If skipping, the next step might need the default created.srt path
+                current_srt_path = os.path.join(self.subtitles_dir.get(), "created.srt")
 
             # --- Step 2: Correct Subtitles ---
             if self.run_correct_subtitles.get():
                 self.log_queue.put("--- Step 2: Correcting subtitles... ---\n")
-                corrected_srt_path = os.path.join(self.corrected_dir.get(), f"corrected.srt")
+                
+                # Before running, check if the input SRT file exists.
+                if not os.path.exists(current_srt_path):
+                    self.log_queue.put(f"--- ERROR: Subtitle file for correction not found at {current_srt_path}. Please run Step 1 or place the file manually. ---\n")
+                    return
+
+                corrected_srt_path = os.path.join(self.corrected_dir.get(), "corrected.srt")
                 os.makedirs(self.corrected_dir.get(), exist_ok=True)
                 correct_subtitles(current_srt_path, corrected_srt_path)
                 current_srt_path = corrected_srt_path # Update current path for the next step
@@ -246,30 +248,59 @@ class App(tk.Tk):
                     return
             else:
                 self.log_queue.put("--- Step 2: Skipping subtitle correction. ---\n")
-                # The path from the previous step is carried over
+                # If skipping, check if a corrected file already exists and prefer it for the next step.
+                corrected_srt_path = os.path.join(self.corrected_dir.get(), "corrected.srt")
+                if os.path.exists(corrected_srt_path):
+                    self.log_queue.put(f"--- Found existing corrected subtitle file, will use it for TTS: {corrected_srt_path} ---\n")
+                    current_srt_path = corrected_srt_path
+                # Otherwise, current_srt_path (from step 1 or its skip-block) is passed through.
 
             # --- Step 3: Synthesize TTS ---
             if self.run_tts_synthesis.get():
                 self.log_queue.put("--- Step 3: Synthesizing TTS... ---\n")
-                reference_audio = self.reference_audio_path.get()
-                if not reference_audio:
-                    reference_audio = None
-                
-                synthesize_tts_from_srt(
-                    current_srt_path, # Use the result from the last executed step
-                    video_path,
-                    self.tts_output_dir.get(),
-                    self.language.get(),
-                    self.temperature.get(),
-                    self.exaggeration.get(),
-                    self.cfg_weight.get(),
-                    self.seed.get(),
-                    self.sentence_group_size.get(),
-                    reference_audio=reference_audio
-                )
-                if self.stop_requested:
-                    self.log_queue.put("--- Pipeline stopped by user. ---\n")
+
+                # Before running, check if the final input SRT file exists.
+                if not os.path.exists(current_srt_path):
+                    self.log_queue.put(f"--- ERROR: Subtitle file for TTS not found at {current_srt_path}. Please run previous steps or place the file manually. ---\n")
                     return
+
+                reference_audio_paths = [path.strip() for path in self.reference_audio_path.get().split(';') if path.strip()]
+
+                if not reference_audio_paths:
+                    self.log_queue.put("--- No reference audio provides. Running TTS with default voice... ---\n")
+                    synthesize_tts_from_srt(
+                        current_srt_path,
+                        video_path,
+                        self.tts_output_dir.get(),
+                        self.language.get(),
+                        self.temperature.get(),
+                        self.exaggeration.get(),
+                        self.cfg_weight.get(),
+                        self.seed.get(),
+                        self.sentence_group_size.get(),
+                        reference_audio=None
+                    )
+                    if self.stop_requested:
+                        self.log_queue.put("--- Pipeline stopped by user. ---\n")
+                        return
+                else:
+                    for i, ref_path in enumerate(reference_audio_paths):
+                        self.log_queue.put(f"--- [{i+1}/{len(reference_audio_paths)}] Synthesizing with reference: {os.path.basename(ref_path)} ---\n")
+                        synthesize_tts_from_srt(
+                            current_srt_path,
+                            video_path,
+                            self.tts_output_dir.get(),
+                            self.language.get(),
+                            self.temperature.get(),
+                            self.exaggeration.get(),
+                            self.cfg_weight.get(),
+                            self.seed.get(),
+                            self.sentence_group_size.get(),
+                            reference_audio=ref_path
+                        )
+                        if self.stop_requested:
+                            self.log_queue.put("--- Pipeline stopped by user. ---\n")
+                            return
             else:
                 self.log_queue.put("--- Step 3: Skipping TTS synthesis. ---\n")
 

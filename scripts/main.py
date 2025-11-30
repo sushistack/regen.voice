@@ -42,6 +42,13 @@ def synthesize_tts_from_srt(corrected_srt_path: str, video_path: str, tts_output
     print("--- SRT 파일 기반 TTS 합성 시작 ---")
     os.makedirs(tts_output_dir, exist_ok=True)
 
+    # Get a unique name from the reference audio path
+    if reference_audio and os.path.exists(reference_audio):
+        reference_name = os.path.splitext(os.path.basename(reference_audio))[0]
+    else:
+        reference_name = "default_voice"
+    print(f"--- Reference Audio Voice: {reference_name} ---")
+
     with open(corrected_srt_path, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
@@ -74,7 +81,8 @@ def synthesize_tts_from_srt(corrected_srt_path: str, video_path: str, tts_output
         if not text_to_speak.strip():
             continue
 
-        output_filename = f"{video_file_name}_{today_str}_{loop_index}.wav"
+        # Add reference_name to the output filename to make it unique
+        output_filename = f"{video_file_name}_{reference_name}_{today_str}_{loop_index}.wav"
         output_path = os.path.join(tts_output_dir, output_filename)
         
         tts_command = [
@@ -94,20 +102,28 @@ def synthesize_tts_from_srt(corrected_srt_path: str, video_path: str, tts_output
         print(f"--- TTS 명령어 실행 ({loop_index}/{len(processed_subtitle_texts)//classify_size + 1}) ---")
         subprocess.run(tts_command)
 
-    print("--- 모든 TTS 파일 생성 완료 ---")
-    merged_output_path = merge_audio_files(tts_output_dir, silence_duration_ms=200)
+    print(f"--- 모든 TTS 파일 생성 완료 ({reference_name}) ---")
+    merged_output_path = merge_audio_files(tts_output_dir, reference_name, video_file_name, silence_duration_ms=200)
     
-    print(f"--- 모든 오디오 파일 병합 완료 ---")
+    print(f"--- 모든 오디오 파일 병합 완료 ({reference_name}) ---")
     print(f"병합된 파일이 다음 경로에 저장되었습니다: {merged_output_path}")
 
-def merge_audio_files(tts_output_dir: str, silence_duration_ms: int = 200):
+def merge_audio_files(tts_output_dir: str, reference_name: str, video_file_name: str, silence_duration_ms: int = 200):
     """
-    생성된 오디오 파일들을 병합하고, 파일들 사이에 묵음을 추가합니다.
+    특정 reference_name을 포함하는 오디오 파일들을 병합하고, 파일들 사이에 묵음을 추가합니다.
     """
-    print("--- 생성된 오디오 파일 병합 시작 ---")
+    print(f"--- 생성된 오디오 파일 병합 시작 ({reference_name}) ---")
     
-    # tts_output_dir에서 .wav 파일들을 찾아 리스트에 추가
-    generated_files = [os.path.join(tts_output_dir, f) for f in os.listdir(tts_output_dir) if f.endswith('.wav')]
+    # Find .wav files for the specific reference_name
+    generated_files = [
+        os.path.join(tts_output_dir, f) 
+        for f in os.listdir(tts_output_dir) 
+        if f.endswith('.wav') and reference_name in f and f.startswith(video_file_name)
+    ]
+
+    if not generated_files:
+        print(f"--- 병합할 오디오 파일을 찾을 수 없습니다 ({reference_name}) ---")
+        return None
 
     silence = AudioSegment.silent(duration=silence_duration_ms)
     combined = AudioSegment.empty()
@@ -129,7 +145,9 @@ def merge_audio_files(tts_output_dir: str, silence_duration_ms: int = 200):
                 combined += silence
             print(f"병합 완료: {os.path.basename(file_path)}")
 
-    merged_output_path = os.path.join(tts_output_dir, "merged_output.wav")
+    # Create a unique merged filename
+    merged_output_filename = f"merged_{video_file_name}_{reference_name}.wav"
+    merged_output_path = os.path.join(tts_output_dir, merged_output_filename)
     combined.export(merged_output_path, format="wav")
     
     return merged_output_path
